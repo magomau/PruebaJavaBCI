@@ -15,6 +15,7 @@ import java.util.regex.PatternSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import com.nttdata.apiusuario.model.Usuario;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import static com.nttdata.apiusuario.utilidades.Constantes.*;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -33,6 +35,12 @@ public class UsuarioController {
 	private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Value("${validacionCorreo}")
+    private String validacionCorreo;
+    
+    @Value("${validacionPassword}")
+    private String validacionPassword;
     
     /***
      * Metodo de prueba
@@ -52,13 +60,13 @@ public class UsuarioController {
     public ResponseEntity<Object> registrarUsuario(@RequestBody Usuario usuario) {
     	logger.info("Se inicia el registro de Usuario.");
         try {
-            // Validaciones para correo y contraseña según tus requerimientos
-            if (!usuario.getCorreo().matches("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.cl$")) {
-                return ResponseEntity.badRequest().body("{\"mensaje\": \"Formato de correo incorrecto.\"}");
+            // Validaciones para correo y contraseña
+            if (!usuario.getCorreo().matches(validacionCorreo)) {
+                return ResponseEntity.badRequest().body("{\"mensaje\": \"" + CORREO_INCORRECTO + "\"}");
             }
 
-            if (!usuario.getPassword().matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$")) {
-                return ResponseEntity.badRequest().body("{\"mensaje\": \"La contraseña debe contener al menos una mayúscula, una minúscula y dos números.\"}");
+            if (!usuario.getPassword().matches(validacionPassword)) {
+                return ResponseEntity.badRequest().body("{\"mensaje\": \"" + PASSWORD_INCORRECTA + "\"}");
             }
 
             Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
@@ -66,15 +74,15 @@ public class UsuarioController {
 
         } catch (DataIntegrityViolationException e) {
             logger.error("Correo ya registrado: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("{\"mensaje\": \"El correo ya está registrado.\"}");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("{\"mensaje\": \"" + CORREO_REGISTRADO + "\"}");
 
         } catch (PatternSyntaxException e) {
             logger.error("Error en la expresión regular: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"mensaje\": \"Error en la validación.\"}");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"mensaje\": \"" + ERROR_VALIDACION + "\"}");
 
         } catch (Exception e) {
             logger.error("Error interno del servidor: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"mensaje\": \"Error interno del servidor.\"}");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"mensaje\": \"" + ERROR_INTERNO + "\"}");
         }
     }
 

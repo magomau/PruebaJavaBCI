@@ -28,7 +28,7 @@ public class UsuarioService {
      */
     @Transactional
     public Usuario crearUsuario(Usuario usuario) throws Exception {
-        // Verificar si el correo ya existe en la base de datos
+        // Verifica si el correo ya existe en la base de datos
         if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
             throw new Exception("El correo ya registrado");
         }
@@ -67,8 +67,6 @@ public class UsuarioService {
         }
 
         Usuario fetchedUsuario = existeUsuario.get();
-
-        // Validaciones (si son necesarias, similares a las de arriba)
 
         // Actualizar campos y guardar
         fetchedUsuario.setNombre(usuario.getNombre());
